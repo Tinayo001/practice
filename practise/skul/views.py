@@ -1,5 +1,17 @@
 from django.shortcuts import render
 from .models import Student
+from django.db import models  # This is needed for 'models.Sum'
+
+def add_student(request):
+    return render(request, 'add_student.html')
+
+def add_subject(request):
+    return render(request, 'add_subject.html')
+
+def show_all_students():
+    pens = Student.objects.all()
+    return pens
+
 
 def calculate_total_marks_by_name(student_name):
     """

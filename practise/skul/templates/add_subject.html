@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Subject</title>
+    <script>
+        // Function to fetch all students from the API and populate the dropdown menu
+        async function fetchStudents() {
+            try {
+                const response = await fetch('/api/get_all/');
+                if (!response.ok) {
+                    console.log('Error fetching students');
+                    alert('Failed to load students');
+                    return;
+                }
+                const students = await response.json();
+                const studentSelect = document.getElementById('student_name');
+                
+                // Clear the existing options
+                studentSelect.innerHTML = '<option value="" selected>Select Student</option>';
+
+                // Populate the dropdown with student options
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.name;  // Use student name as the value
+                    option.textContent = student.name;  // Use student name as the display text
+                    studentSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.log('Error:', error);
+                alert('Failed to load students');
+            }
+        }
+
+        // Function to handle adding a subject
+        async function addSubject(event) {
+            event.preventDefault();  // Prevent form submission (page reload)
+
+            // Retrieve input values
+            const studentName = document.getElementById('student_name').value;
+            const subjectName = document.getElementById('subject_name').value;
+            const marks = document.getElementById('marks').value;
+
+            // Validate that all fields are filled
+            if (!studentName || !subjectName || !marks) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            // Construct the data object in the required format
+            const data = { 
+                student: studentName,  // Use student name
+                name: subjectName, 
+                marks: parseInt(marks)
+            };
+
+            // Get CSRF token from the hidden input
+            const csrfToken = document.getElementById('csrf_token').value;
+
+            try {
+                // Send data to the API endpoint
+                const response = await fetch('/api/add_subject/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken  // Include CSRF token
+                    },
+                    body: JSON.stringify(data)  // Send the data as JSON
+                });
+
+                // Handle response
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.log('Error response:', errorData);
+                    alert(`Failed to add subject: ${errorData.error || 'Unknown error'}`);
+                } else {
+                    const responseData = await response.json();
+                    console.log('Success response:', responseData);
+                    alert('Subject added successfully');
+                }
+            } catch (error) {
+                console.log('Request failed:', error);
+                alert('Failed to connect to the server');
+            }
+        }
+
+        // Fetch the list of students when the page loads
+        window.onload = fetchStudents;
+    </script>
+</head>
+<body>
+    <h1>Add Subject</h1>
+
+    <!-- CSRF token -->
+    <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+
+    <!-- Form to add subject -->
+    <form id="subject-form" onsubmit="addSubject(event)">
+        <div>
+            <label for="student_name">Student Name:</label>
+            <select id="student_name" required>
+                <option value="" selected>Select Student</option>
+                <!-- Student options will be populated here -->
+            </select>
+        </div>
+        
+        <div>
+            <label for="subject_name">Subject Name:</label>
+            <input type="text" id="subject_name" placeholder="Enter subject name" required>
+        </div>
+        
+        <div>
+            <label for="marks">Marks:</label>
+            <input type="number" id="marks" placeholder="Enter marks" required>
+        </div>
+        
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
+

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student</title>
+    <script>
+        async function addStudent() {
+            const name = document.getElementById('name').value;  // Get input value
+            const data = { name: name };
+
+            // Get CSRF token from the DOM
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            console.log('Data to be sent:', data);
+
+            try {
+                // Send data to the API
+                const response = await fetch('/api/add_student/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',  // Set Content-Type to JSON
+                        'X-CSRFToken': csrfToken,  // Include CSRF token
+                    },
+                    body: JSON.stringify(data),  // Convert JavaScript object to JSON string
+                });
+
+                // Handle response
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.log('Error response:', errorData);  // Log the error message
+                    alert('Failed to add student');
+                } else {
+                    const responseData = await response.json();
+                    console.log('Success response:', responseData);  // Log success response
+                    alert('Student added successfully');
+                }
+            } catch (error) {
+                console.log('Request failed', error);  // Log request failure
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Add Student</h1>
+    <form method="post" id="student-form" onsubmit="event.preventDefault(); addStudent();">
+        {% csrf_token %}
+        <label for="name">Student Name:</label>
+        <input type="text" id="name" name="name" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
